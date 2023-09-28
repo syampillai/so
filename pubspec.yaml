@@ -1,6 +1,6 @@
 name: so
 description: A client library to comminucate and exchange data with SO Platform.
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/syampillai/so
 
 environment:

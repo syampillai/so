@@ -6,7 +6,6 @@ import 'package:http/retry.dart';
 
 /// SO Platform Client.
 class Client {
-
   /// Application name
   final String application;
 
@@ -22,13 +21,11 @@ class Client {
     "charset": "utf-8",
   };
   final RetryClient _connection = RetryClient(http.Client());
-  String _username = "",
-      _password = "",
-      _session = "",
-      _cookie = "";
+  String _username = "", _password = "", _session = "", _cookie = "";
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
-  Client(host, this.application, [this.deviceWidth = 1024, this.deviceHeight = 768])
+  Client(host, this.application,
+      [this.deviceWidth = 1024, this.deviceHeight = 768])
       : _uri = Uri.https(host, "$application/CONNECTOR");
 
   /// Login. Requires username and password.
@@ -76,7 +73,7 @@ class Client {
   /// The return value contains the error message if any. An empty return value means that the password is changed successfully.
   Future<String> changePassword(String newPassword) async {
     var r = await command("changePassword",
-        { "oldPassword": _password, "newPassword": newPassword});
+        {"oldPassword": _password, "newPassword": newPassword});
     if (r["status"] == "OK") {
       return "";
     }
@@ -94,14 +91,16 @@ class Client {
   /// (See [documentation](https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API#persisting-state-in-connector-logic)).
   ///
   /// The map that is returned will contain the result of the execution of the command.
-  Future<Map<String, dynamic>> command(String command, Map<String, dynamic> attributes, [bool preserveServerState = false]) async {
+  Future<Map<String, dynamic>> command(
+      String command, Map<String, dynamic> attributes,
+      [bool preserveServerState = false]) async {
     if (_username == "" || _session == "") {
       attributes["status"] = "ERROR";
       attributes["message"] = "Not logged in";
       return attributes;
     }
     attributes["command"] = command;
-    if(preserveServerState) {
+    if (preserveServerState) {
       attributes["continue"] = true;
     }
     var r = await _post(attributes);
@@ -136,28 +135,31 @@ class Client {
     if (_username == "" || _session == "") {
       return Data.empty("Not logged in");
     }
-    var r = await _postR({ "command": command, command: name }, true);
+    var r = await _postR({"command": command, command: name}, true);
     String ct = r.headers["content-type"] as String;
     int i = ct.indexOf(";");
-    if(i >= 0) {
+    if (i >= 0) {
       ct = ct.substring(0, i);
     }
-    if(ct == "application/json") {
+    if (ct == "application/json") {
       Map<String, dynamic> map = jsonDecode(utf8.decode(r.bodyBytes));
-      switch(map['status']) {
-        case 'ERROR': return Data.empty(map['message']);
-        case 'LOGIN': return Data.empty('Not logged in');
+      switch (map['status']) {
+        case 'ERROR':
+          return Data.empty(map['message']);
+        case 'LOGIN':
+          return Data.empty('Not logged in');
       }
     }
     return Data(ct, r.bodyBytes);
   }
 
-  Future<Map<String, dynamic>> _post(Map<String, dynamic> map, [bool command = true]) async {
+  Future<Map<String, dynamic>> _post(Map<String, dynamic> map,
+      [bool command = true]) async {
     var response = await _postR(map, command);
-    if(_cookie == "") {
+    if (_cookie == "") {
       var c = response.headers["set-cookie"];
-      if(c != Null) {
-        _cookie = c as String;
+      if (c != null) {
+        _cookie = c;
       }
     }
     return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -167,10 +169,11 @@ class Client {
     if (command) {
       map["session"] = _session;
     }
-    if(_cookie != "") {
+    if (_cookie != "") {
       _headers["cookie"] = _cookie;
     }
-    return await _connection.post(_uri,
+    return await _connection.post(
+      _uri,
       headers: _headers,
       body: jsonEncode(map),
     );
@@ -179,7 +182,6 @@ class Client {
 
 /// Representation of some sort of content.
 class Data {
-
   /// Mime type of the content.
   final String contentType;
 
@@ -193,5 +195,7 @@ class Data {
   Data(this.contentType, this.data) : error = '';
 
   /// Constructor for creating empty data.
-  Data.empty(this.error) : contentType = "", data = Uint8List(0);
+  Data.empty(this.error)
+      : contentType = "",
+        data = Uint8List(0);
 }

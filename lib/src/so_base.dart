@@ -127,7 +127,7 @@ class Client {
   }
 
   /// Retrieve stream of data from a file with [name] (This could be the name
-  /// of the file or Id of the file.
+  /// of the file or Id of the file).
   Future<Data> file(String name) async {
     return await _stream("file", name);
   }

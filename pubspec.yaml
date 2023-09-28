@@ -1,5 +1,5 @@
 name: so
-description: A starting point for Dart libraries or applications.
+description: A client library to comminucate and exchange data with SO Platform.
 version: 0.0.1
 repository: https://github.com/syampillai/so
 

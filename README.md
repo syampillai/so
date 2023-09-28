@@ -25,18 +25,34 @@ This library can be used to connect to SO platform from dart (and flutter) appli
 it is used by mobile application developers to create customized mobile front-ends for the SO platform.
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+You may import this library to your dart application with the following command (in your project folder):
+
+```shell
+dart pub add so
+dart pub get
+```
+
+If you want to use it with flutter:
+```shell
+flutter pub add so
+flutter pub get
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
 ```dart
-const like = 'sample';
-```
+import 'package:so/so.dart';
 
+Future<void> main() async {
+  Client client = Client("host", "application");
+  String status = await client.login("username", "password");
+  if(status == "") {
+    print("Logged in successfully");
+  } else {
+    print("Not logged in. Error: $status");
+  }
+}
+```
 ## Additional information
 
 SO platform wiki pages are available at [SO Platform Wiki](https://github.com/syampillai/SOTraining/wiki).

@@ -24,7 +24,8 @@ class Client {
   final RetryClient _connection = RetryClient(http.Client());
   String _username = "",
       _password = "",
-      _session = "";
+      _session = "",
+      _cookie = "";
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   Client(host, this.application, [this.deviceWidth = 1024, this.deviceHeight = 768])
@@ -65,7 +66,8 @@ class Client {
     try {
       await command("logout", {});
     } finally {
-      _session = _password = _username = "";
+      _session = _password = _username = _cookie = "";
+      _headers.remove("cookie");
     }
   }
 
@@ -87,17 +89,21 @@ class Client {
   /// [SO Connector]https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API documentation
   /// for parameter details. Please note that [command] is passed as the first parameter and thus, it need
   /// not be specified in the [attributes]. Also, "session" is not required because [Client] will
-  /// automatically add that.
+  /// automatically add that. If the optional [preserveServerState] value is true,
+  /// the "continue" attribute will be set to preserve the server state
+  /// (See [documentation](https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API#persisting-state-in-connector-logic)).
   ///
   /// The map that is returned will contain the result of the execution of the command.
-  Future<Map<String, dynamic>> command(String command, Map<String, dynamic> attributes) async {
+  Future<Map<String, dynamic>> command(String command, Map<String, dynamic> attributes, [bool preserveServerState = false]) async {
     if (_username == "" || _session == "") {
       attributes["status"] = "ERROR";
       attributes["message"] = "Not logged in";
       return attributes;
     }
     attributes["command"] = command;
-    attributes["session"] = _session;
+    if(preserveServerState) {
+      attributes["continue"] = true;
+    }
     var r = await _post(attributes);
     if (r["status"] == "LOGIN") {
       var u = _username;
@@ -128,25 +134,41 @@ class Client {
 
   Future<Data> _stream(String command, String name) async {
     if (_username == "" || _session == "") {
-      return Data.empty();
+      return Data.empty("Not logged in");
     }
     var r = await _postR({ "command": command, command: name }, true);
-    String ct = r.headers["Content-Type"] as String;
+    String ct = r.headers["content-type"] as String;
     int i = ct.indexOf(";");
     if(i >= 0) {
       ct = ct.substring(0, i);
+    }
+    if(ct == "application/json") {
+      Map<String, dynamic> map = jsonDecode(utf8.decode(r.bodyBytes));
+      switch(map['status']) {
+        case 'ERROR': return Data.empty(map['message']);
+        case 'LOGIN': return Data.empty('Not logged in');
+      }
     }
     return Data(ct, r.bodyBytes);
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map, [bool command = true]) async {
     var response = await _postR(map, command);
+    if(_cookie == "") {
+      var c = response.headers["set-cookie"];
+      if(c != Null) {
+        _cookie = c as String;
+      }
+    }
     return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
   }
 
   Future<http.Response> _postR(Map<String, dynamic> map, bool command) async {
     if (command) {
       map["session"] = _session;
+    }
+    if(_cookie != "") {
+      _headers["cookie"] = _cookie;
     }
     return await _connection.post(_uri,
       headers: _headers,
@@ -161,11 +183,15 @@ class Data {
   /// Mime type of the content.
   final String contentType;
 
-  /// Data
+  /// Data.
   final Uint8List data;
 
-  /// Constructor.
-  Data(this.contentType, this.data);
+  // Error (for valid data, it will be empty).
+  final String error;
 
-  Data.empty() : contentType = "", data = Uint8List(0);
+  /// Constructor.
+  Data(this.contentType, this.data) : error = '';
+
+  /// Constructor for creating empty data.
+  Data.empty(this.error) : contentType = "", data = Uint8List(0);
 }

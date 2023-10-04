@@ -46,6 +46,9 @@ class Client {
       "deviceWidth": deviceWidth,
       "deviceHeight": deviceHeight
     };
+    _headers.remove("cookie");
+    _cookie = "";
+    _session = "";
     var r = await _post(map, false);
     if (r["status"] != "OK") {
       return r["message"] as String;

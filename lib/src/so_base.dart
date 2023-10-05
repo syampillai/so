@@ -124,19 +124,32 @@ class Client {
   /// Retrieve stream of data for the [name].
   ///
   /// You should have got the [name] from a previous request.
-  Future<Data> stream(String name) async {
+  ///
+  /// The return value is a record with 3 optional elements. If the
+  /// data is retrieved successfully, the first will be the data,
+  /// the second element will be the content-type and the third element will be
+  /// null. Otherwise, the first 2 elements will be null and the third element
+  /// will be the error description.
+  Future<(Uint8List?, String?, String?)> stream(String name) async {
     return await _stream("stream", name);
   }
 
   /// Retrieve stream of data from a file with [name] (This could be the name
   /// of the file or Id of the file).
-  Future<Data> file(String name) async {
+  ///
+  /// The return value is a record with 3 optional elements. If the
+  /// data is retrieved successfully, the first will be the data,
+  /// the second element will be the content-type and the third element will be
+  /// null. Otherwise, the first 2 elements will be null and the third element
+  /// will be the error description.
+  Future<(Uint8List?, String?, String?)> file(String name) async {
     return await _stream("file", name);
   }
 
-  Future<Data> _stream(String command, String name) async {
+  Future<(Uint8List?, String?, String?)> _stream(
+      String command, String name) async {
     if (_username == "" || _session == "") {
-      return Data.empty("Not logged in");
+      return (null, null, "Not logged in");
     }
     var r = await _postR({"command": command, command: name}, true);
     String ct = r.headers["content-type"] as String;
@@ -148,12 +161,12 @@ class Client {
       Map<String, dynamic> map = jsonDecode(utf8.decode(r.bodyBytes));
       switch (map['status']) {
         case 'ERROR':
-          return Data.empty(map['message']);
+          return (null, null, map['message'] as String);
         case 'LOGIN':
-          return Data.empty('Not logged in');
+          return (null, null, 'Not logged in');
       }
     }
-    return Data(ct, r.bodyBytes);
+    return (r.bodyBytes, ct, null);
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map,
@@ -201,4 +214,9 @@ class Data {
   Data.empty(this.error)
       : contentType = "",
         data = Uint8List(0);
+
+  // Check if the data is valid.
+  bool isError() {
+    return error != '';
+  }
 }

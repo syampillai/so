@@ -11,3 +11,6 @@
 ## 1.0.0
 - Stable release.
 - Example code updated to demonstrate more features.
+
+## 2.0.0
+- Change that is not backward compatible: The `stream` and `file` methods now return a record instead of a class.

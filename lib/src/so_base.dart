@@ -86,7 +86,7 @@ class Client {
   /// Send a command and get the response.
   ///
   /// The [attributes] should contain a map of the parameters. Please refer to the
-  /// [SO Connector]https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API documentation
+  /// [SO Connector](https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API) documentation
   /// for parameter details. Please note that [command] is passed as the first parameter and thus, it need
   /// not be specified in the [attributes]. Also, "session" is not required because [Client] will
   /// automatically add that. If the optional [preserveServerState] value is true,
@@ -193,30 +193,5 @@ class Client {
       headers: _headers,
       body: jsonEncode(map),
     );
-  }
-}
-
-/// Representation of some sort of content.
-class Data {
-  /// Mime type of the content.
-  final String contentType;
-
-  /// Data.
-  final Uint8List data;
-
-  // Error (for valid data, it will be empty).
-  final String error;
-
-  /// Constructor.
-  Data(this.contentType, this.data) : error = '';
-
-  /// Constructor for creating empty data.
-  Data.empty(this.error)
-      : contentType = "",
-        data = Uint8List(0);
-
-  // Check if the data is valid.
-  bool isError() {
-    return error != '';
   }
 }

@@ -2,7 +2,7 @@ import 'package:so/so.dart';
 
 Future<void> main() async {
   Client client = Client("emqim12.engravsystems.com", "emqimtest");
-  String status = await client.login("syam", "Kayamkulam1@");
+  String status = await client.login("username", "password");
   if (status == "") {
     print("Logged in successfully");
     var (_, contentType, error) =

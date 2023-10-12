@@ -1,12 +1,12 @@
 import 'package:so/so.dart';
 
 Future<void> main() async {
-  Client client = Client("emqim12.engravsystems.com", "emqimtest");
-  String status = await client.login("username", "password");
+  Client client = Client("0.engravsystems.com:8443", "jh");
+  String status = await client.login("admin", "");
   if (status == "") {
     print("Logged in successfully");
     var (_, contentType, error) =
-        await client.file("ENGRAV Air - Operation Manual");
+        await client.file("Weight Schedule - Approval Letter");
     if (error == null) {
       print("Mime type of the file retrieved is: $contentType");
     } else {

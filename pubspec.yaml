@@ -1,13 +1,14 @@
 name: so
 description: A client library to communicate and exchange data with SO Platform.
-version: 2.0.0
+version: 3.0.0
 repository: https://github.com/syampillai/so
 
 environment:
   sdk: ^3.1.2
 
 dependencies:
-  http: ^1.1.0
+  web_socket_channel: ^2.4.0
+  synchronized: ^3.1.0
 
 dev_dependencies:
   lints: ^2.0.0

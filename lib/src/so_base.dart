@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
-import 'package:http/retry.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
+import 'package:synchronized/synchronized.dart';
 
 /// SO Platform Client.
 class Client {
@@ -15,18 +16,18 @@ class Client {
   /// Device height
   final int deviceHeight;
 
-  final Uri _uri;
-  final Map<String, String> _headers = {
-    "Content-Type": "application/json",
-    "charset": "utf-8",
-  };
-  final RetryClient _connection = RetryClient(http.Client());
-  String _username = "", _password = "", _session = "", _cookie = "";
+  final WebSocketChannel _connection;
+  final Lock _lock = Lock();
+  String _username = "", _password = "", _session = "";
+  final List<dynamic> _received = [];
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   Client(host, this.application,
       [this.deviceWidth = 1024, this.deviceHeight = 768])
-      : _uri = Uri.https(host, "$application/CONNECTOR");
+      : _connection = WebSocketChannel.connect(
+            Uri.parse("wss://$host/$application/CONNECTORWS")) {
+    _connection.stream.listen((message) => _received.add(message));
+  }
 
   /// Login. Requires username and password.
   ///
@@ -46,8 +47,6 @@ class Client {
       "deviceWidth": deviceWidth,
       "deviceHeight": deviceHeight
     };
-    _headers.remove("cookie");
-    _cookie = "";
     _session = "";
     var r = await _post(map, false);
     if (r["status"] != "OK") {
@@ -65,9 +64,9 @@ class Client {
   Future<void> logout() async {
     try {
       await command("logout", {});
+      _connection.sink.close(status.goingAway);
     } finally {
-      _session = _password = _username = _cookie = "";
-      _headers.remove("cookie");
+      _session = _password = _username = "";
     }
   }
 
@@ -151,47 +150,30 @@ class Client {
     if (_username == "" || _session == "") {
       return (null, null, "Not logged in");
     }
-    var r = await _postR({"command": command, command: name}, true);
-    String ct = r.headers["content-type"] as String;
-    int i = ct.indexOf(";");
-    if (i >= 0) {
-      ct = ct.substring(0, i);
+    var r = await this.command(command, {"command": command, command: name});
+    if (r['status'] == 'ERROR') {
+      return (null, null, r['message'] as String);
     }
-    if (ct == "application/json") {
-      Map<String, dynamic> map = jsonDecode(utf8.decode(r.bodyBytes));
-      switch (map['status']) {
-        case 'ERROR':
-          return (null, null, map['message'] as String);
-        case 'LOGIN':
-          return (null, null, 'Not logged in');
-      }
-    }
-    return (r.bodyBytes, ct, null);
+    return await _lock.synchronized(() async {
+      return (await _receive() as Uint8List, r['type'] as String, null);
+      });
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map,
       [bool command = true]) async {
-    var response = await _postR(map, command);
-    if (_cookie == "") {
-      var c = response.headers["set-cookie"];
-      if (c != null) {
-        _cookie = c;
-      }
-    }
-    return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-  }
-
-  Future<http.Response> _postR(Map<String, dynamic> map, bool command) async {
     if (command) {
       map["session"] = _session;
     }
-    if (_cookie != "") {
-      _headers["cookie"] = _cookie;
+    return await _lock.synchronized(() async {
+      _connection.sink.add(jsonEncode(map));
+      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+    });
+  }
+
+  Future<dynamic> _receive() async {
+    while (_received.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-    return await _connection.post(
-      _uri,
-      headers: _headers,
-      body: jsonEncode(map),
-    );
+    return _received.removeAt(0);
   }
 }

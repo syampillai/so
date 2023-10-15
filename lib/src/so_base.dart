@@ -22,10 +22,11 @@ class Client {
   final List<dynamic> _received = [];
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
+  /// The [secured] parameter determines whether the connection should use TLS encryption or not.
   Client(host, this.application,
-      [this.deviceWidth = 1024, this.deviceHeight = 768])
-      : _connection = WebSocketChannel.connect(
-            Uri.parse("wss://$host/$application/CONNECTORWS")) {
+      [this.deviceWidth = 1024, this.deviceHeight = 768, secured = true])
+      : _connection = WebSocketChannel.connect(Uri.parse(
+            "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
     _connection.stream.listen((message) => _received.add(message));
   }
 
@@ -156,7 +157,7 @@ class Client {
     }
     return await _lock.synchronized(() async {
       return (await _receive() as Uint8List, r['type'] as String, null);
-      });
+    });
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map,

@@ -14,3 +14,6 @@
 
 ## 2.0.0
 - Change that is not backward compatible: The `stream` and `file` methods now return a record instead of a class.
+
+## 3.0.0
+- Rewrite with WebSocket connection instead of HTTPS connection. It should now support all the platforms.

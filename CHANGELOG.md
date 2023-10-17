@@ -17,3 +17,11 @@
 
 ## 3.0.0
 - Rewrite with WebSocket connection instead of HTTPS connection. It should now support all the platforms.
+
+## 3.1.0
+- Added new helper methods.
+- Change that is not backward compatible: Signature change in the `changePassword` method.
+
+## 3.1.1
+- A couple of minor bugs are fixed.
+- Code refactoring and improvements.

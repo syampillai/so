@@ -30,9 +30,23 @@ class Client {
     _connection.stream.listen((message) => _received.add(message));
   }
 
+  /// Get the current username.
+  ///
+  /// Returns current username.
+  String getUsername() {
+    return _username;
+  }
+
+  /// Check if the [password] passed is the current password or so.
+  ///
+  /// Returns true if the current password matches with the [password] passed.
+  bool checkPassword(String password) {
+    return password == _password;
+  }
+
   /// Login. Requires username and password.
   ///
-  /// Return value contains the error message. If logged in successfully, the return value will be an empty string.
+  /// Returns value contains the error message. If logged in successfully, the return value will be an empty string.
   Future<String> login(String username, String password) async {
     if (_username != "") {
       return "Already logged in";
@@ -49,7 +63,7 @@ class Client {
       "deviceHeight": deviceHeight
     };
     _session = "";
-    var r = await _post(map, false);
+    var r = await _post(map);
     if (r["status"] != "OK") {
       return r["message"] as String;
     }
@@ -71,13 +85,18 @@ class Client {
     }
   }
 
-  /// Change the password to [newPassword].
+  /// Change the [currentPassword] to [newPassword].
   ///
   /// The return value contains the error message if any. An empty return value means that the password is changed successfully.
-  Future<String> changePassword(String newPassword) async {
+  Future<String> changePassword(
+      String currentPassword, String newPassword) async {
+    if (!checkPassword(currentPassword)) {
+      return "Current password is incorrect";
+    }
     var r = await command("changePassword",
         {"oldPassword": _password, "newPassword": newPassword});
     if (r["status"] == "OK") {
+      _password = newPassword;
       return "";
     }
     return r["message"];
@@ -97,25 +116,44 @@ class Client {
   Future<Map<String, dynamic>> command(
       String command, Map<String, dynamic> attributes,
       [bool preserveServerState = false]) async {
+    return _command(command, attributes, true, preserveServerState);
+  }
+
+  Map<String, dynamic> _error(String error) {
+    return {
+      "status": "ERROR",
+      "message": error,
+    };
+  }
+
+  Future<Map<String, dynamic>> _command(
+      String command, Map<String, dynamic> attributes, bool checkCommand,
+      [bool preserveServerState = false]) async {
     if (_username == "" || _session == "") {
-      attributes["status"] = "ERROR";
-      attributes["message"] = "Not logged in";
-      return attributes;
+      return _error("Not logged in");
     }
+    if (checkCommand) {
+      switch (command) {
+        case "file":
+        case "stream":
+          return _error("Invalid command");
+      }
+    }
+    attributes["session"] = _session;
     attributes["command"] = command;
     if (preserveServerState) {
       attributes["continue"] = true;
     }
     var r = await _post(attributes);
     if (r["status"] == "LOGIN") {
+      _session = r["session"];
       var u = _username;
       _username = "";
       var status = await login(u, _password);
       if (status != "") {
-        attributes["status"] = "ERROR";
-        attributes["message"] = "Can't re-login. Reason: $status";
-        return attributes;
+        return _error("Can't re-login. Reason: $status");
       }
+      return await this.command(command, attributes, false);
     }
     r.remove("session");
     return r;
@@ -148,10 +186,7 @@ class Client {
 
   Future<(Uint8List?, String?, String?)> _stream(
       String command, String name) async {
-    if (_username == "" || _session == "") {
-      return (null, null, "Not logged in");
-    }
-    var r = await this.command(command, {"command": command, command: name});
+    var r = await _command(command, {command: name}, false, false);
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }
@@ -160,11 +195,7 @@ class Client {
     });
   }
 
-  Future<Map<String, dynamic>> _post(Map<String, dynamic> map,
-      [bool command = true]) async {
-    if (command) {
-      map["session"] = _session;
-    }
+  Future<Map<String, dynamic>> _post(Map<String, dynamic> map) async {
     return await _lock.synchronized(() async {
       _connection.sink.add(jsonEncode(map));
       return jsonDecode(await _receive() as String) as Map<String, dynamic>;

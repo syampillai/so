@@ -2,7 +2,7 @@ import 'package:so/so.dart';
 
 Future<void> main() async {
   Client client = Client("emqim12.engravsystems.com", "emqimtest");
-  String status = await client.login("syam", "Kayamkulam1@");
+  String status = await client.login("username", "password");
   if (status == "") {
     print("Logged in successfully");
     var (_, contentType, error) =
@@ -11,6 +11,13 @@ Future<void> main() async {
       print("Mime type of the file retrieved is: $contentType");
     } else {
       print("Error retrieving file: $error");
+    }
+    (_, contentType, error) = await client
+        .report("com.engravsystems.emqim.operations.logic.TestReport");
+    if (error == null) {
+      print("Mime type of the report is: $contentType");
+    } else {
+      print("Error running report: $error");
     }
     Map<String, dynamic> attributes;
     print("List of persons whose first name starts with the letter N");
@@ -50,7 +57,8 @@ Future<void> main() async {
 void printResult(Map<String, dynamic> result) {
   switch (result) {
     case {'status': 'OK'}:
-      print(result['data']);
+      var data = result['data'];
+      print(data ?? result);
     default:
       print("Error: ${result['message]']}");
   }

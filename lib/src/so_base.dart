@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -184,9 +183,24 @@ class Client {
     return await _stream("file", name);
   }
 
-  Future<(Uint8List?, String?, String?)> _stream(
-      String command, String name) async {
-    var r = await _command(command, {command: name}, false, false);
+  /// Retrieve stream of data from a file with [name] (This could be the name
+  /// of the file or Id of the file).
+  ///
+  /// The return value is a record with 3 optional elements. If the
+  /// data is retrieved successfully, the first will be the data,
+  /// the second element will be the content-type and the third element will be
+  /// null. Otherwise, the first 2 elements will be null and the third element
+  /// will be the error description.
+  Future<(Uint8List?, String?, String?)> report(String logic,
+      [Map<String, dynamic>? parameters]) async {
+    return await _stream("report", logic, parameters);
+  }
+
+  Future<(Uint8List?, String?, String?)> _stream(String command, String name,
+      [Map<String, dynamic>? parameters]) async {
+    parameters ??= {};
+    parameters[command] = name;
+    var r = await _command(command, parameters, false, false);
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }
@@ -202,10 +216,63 @@ class Client {
     });
   }
 
+  Future<Map<String, dynamic>> _postBinary(Uint8List data) async {
+    return await _lock.synchronized(() async {
+      _connection.sink.add(data);
+      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+    });
+  }
+
+  Future<Map<String, dynamic>> _postBinaryStream(Stream<Uint8List> data) async {
+    return await _lock.synchronized(() async {
+      _connection.sink.addStream(data);
+      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+    });
+  }
+
   Future<dynamic> _receive() async {
     while (_received.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     return _received.removeAt(0);
+  }
+
+  /// Upload some binary [data] to the server. [mimeType] of the content should be correctly specified
+  /// and it will not be verified at the server.
+  ///
+  /// If the return value contains key ("status": "OK"), look for the value for the key "id". That will
+  /// contain the ID of the server content. The [streamNameOrID] may be used to specify that
+  /// you want to overwrite some existing content. It could be specified as a name or as an Id value.
+  Future<Map<String, dynamic>> upload(String mimeType, Uint8List data,
+      [String streamNameOrID = '']) async {
+    Map<String, dynamic>? map = await _upload(mimeType, streamNameOrID);
+    map ??= await _postBinary(data);
+    map.remove('session');
+    return map;
+  }
+
+  /// Upload a stream of binary [data] to the server. [mimeType] of the content should be correctly specified
+  /// and it will not be verified at the server.
+  ///
+  /// If the return value contains key ("status": "OK"), look for the value for the key "id". That will
+  /// contain the ID of the server content. The [streamNameOrID] may be used to specify that
+  /// you want to overwrite some existing content. It could be specified as a name or as an Id value.
+  Future<Map<String, dynamic>> uploadStream(
+      String mimeType, Stream<Uint8List> data,
+      [String streamNameOrID = '']) async {
+    Map<String, dynamic>? map = await _upload(mimeType, streamNameOrID);
+    map ??= await _postBinaryStream(data);
+    map.remove('session');
+    return map;
+  }
+
+  Future<Map<String, dynamic>?> _upload(String mimeType,
+      [String streamNameOrID = '']) async {
+    Map<String, dynamic> map = {
+      'type': mimeType,
+      if (streamNameOrID != '') 'stream': streamNameOrID
+    };
+    map = await command('upload', map);
+    return map['status'] == 'OK' ? null : map;
   }
 }

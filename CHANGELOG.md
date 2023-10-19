@@ -25,3 +25,10 @@
 ## 3.1.1
 - A couple of minor bugs are fixed.
 - Code refactoring and improvements.
+
+## 3.2.0
+- New method to upload content to the SO Platform - `upload(...)`
+- New method to run and retrieve the output of reports - `report(...)`
+
+## 3.3.0
+- New method to upload a content stream to the SO Platform - `uploadStream(...)`

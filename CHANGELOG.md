@@ -32,3 +32,6 @@
 
 ## 3.3.0
 - New method to upload a content stream to the SO Platform - `uploadStream(...)`
+
+## 3.3.1
+- Added more error checking while accessing binary data.

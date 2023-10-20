@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -16,6 +17,7 @@ class Client {
   final int deviceHeight;
 
   final WebSocketChannel _connection;
+  StreamSubscription<dynamic>? _subscription;
   final Lock _lock = Lock();
   String _username = "", _password = "", _session = "";
   final List<dynamic> _received = [];
@@ -26,17 +28,16 @@ class Client {
       [this.deviceWidth = 1024, this.deviceHeight = 768, secured = true])
       : _connection = WebSocketChannel.connect(Uri.parse(
             "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
-    _connection.stream.listen((message) => _received.add(message));
+    _subscription =
+        _connection.stream.listen((message) => _received.add(message));
   }
 
   /// Get the current username.
   ///
   /// Returns current username.
-  String getUsername() {
-    return _username;
-  }
+  String get username => _username;
 
-  /// Check if the [password] passed is the current password or so.
+  /// Check if the [password] passed is the current password or not.
   ///
   /// Returns true if the current password matches with the [password] passed.
   bool checkPassword(String password) {
@@ -78,6 +79,7 @@ class Client {
   Future<void> logout() async {
     try {
       await command("logout", {});
+      _subscription?.cancel();
       _connection.sink.close(status.goingAway);
     } finally {
       _session = _password = _username = "";
@@ -204,9 +206,11 @@ class Client {
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }
-    return await _lock.synchronized(() async {
-      return (await _receive() as Uint8List, r['type'] as String, null);
-    });
+    dynamic rec = await _lock.synchronized(() => _receive());
+    if (rec is String) {
+      return (null, null, 'Unexpected: $rec');
+    }
+    return (rec as Uint8List, r['type'] as String, null);
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map) async {

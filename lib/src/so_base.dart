@@ -18,18 +18,19 @@ class Client {
 
   final WebSocketChannel _connection;
   StreamSubscription<dynamic>? _subscription;
-  final Lock _lock = Lock();
+  final Lock _lock = Lock(), _lockBinary = Lock();
   String _username = "", _password = "", _session = "";
-  final List<dynamic> _received = [];
+  final List<String> _received = [];
+  final List<Uint8List> _receivedBinary = [];
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   /// The [secured] parameter determines whether the connection should use TLS encryption or not.
   Client(host, this.application,
       [this.deviceWidth = 1024, this.deviceHeight = 768, secured = true])
       : _connection = WebSocketChannel.connect(Uri.parse(
-            "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
+      "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
     _subscription =
-        _connection.stream.listen((message) => _received.add(message));
+        _connection.stream.listen((message) => message is String ? _received.add(message) : _receivedBinary.add(message));
   }
 
   /// Get the current username.
@@ -206,39 +207,42 @@ class Client {
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }
-    dynamic rec = await _lock.synchronized(() => _receive());
-    if (rec is String) {
-      return (null, null, 'Unexpected: $rec');
-    }
-    return (rec as Uint8List, r['type'] as String, null);
+    return await _lockBinary.synchronized(() async => (await _receiveBinary(), r['type'] as String, null));
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map) async {
     return await _lock.synchronized(() async {
       _connection.sink.add(jsonEncode(map));
-      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+      return jsonDecode(await _receive()) as Map<String, dynamic>;
     });
   }
 
   Future<Map<String, dynamic>> _postBinary(Uint8List data) async {
     return await _lock.synchronized(() async {
       _connection.sink.add(data);
-      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+      return jsonDecode(await _receive()) as Map<String, dynamic>;
     });
   }
 
   Future<Map<String, dynamic>> _postBinaryStream(Stream<Uint8List> data) async {
     return await _lock.synchronized(() async {
       _connection.sink.addStream(data);
-      return jsonDecode(await _receive() as String) as Map<String, dynamic>;
+      return jsonDecode(await _receive()) as Map<String, dynamic>;
     });
   }
 
-  Future<dynamic> _receive() async {
+  Future<String> _receive() async {
     while (_received.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
     return _received.removeAt(0);
+  }
+
+  Future<Uint8List> _receiveBinary() async {
+    while (_receivedBinary.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    return _receivedBinary.removeAt(0);
   }
 
   /// Upload some binary [data] to the server. [mimeType] of the content should be correctly specified

@@ -35,3 +35,7 @@
 
 ## 3.3.1
 - Added more error checking while accessing binary data.
+
+## 3.3.2
+- Separated the capture of text and binary data.
+- Bug related to asynchronous operation fixed.

@@ -28,9 +28,10 @@ class Client {
   Client(host, this.application,
       [this.deviceWidth = 1024, this.deviceHeight = 768, secured = true])
       : _connection = WebSocketChannel.connect(Uri.parse(
-      "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
-    _subscription =
-        _connection.stream.listen((message) => message is String ? _received.add(message) : _receivedBinary.add(message));
+            "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
+    _subscription = _connection.stream.listen((message) => message is String
+        ? _received.add(message)
+        : _receivedBinary.add(message));
   }
 
   /// Get the current username.
@@ -196,7 +197,16 @@ class Client {
   /// will be the error description.
   Future<(Uint8List?, String?, String?)> report(String logic,
       [Map<String, dynamic>? parameters]) async {
-    return await _stream("report", logic, parameters);
+    Map<String, dynamic>? m;
+    if (parameters != null) {
+      dynamic p = parameters["parameters"];
+      if (p != null && p is Map<String, dynamic>) {
+        m = parameters;
+      } else {
+        m = {"parameters": parameters};
+      }
+    }
+    return await _stream("report", logic, m);
   }
 
   Future<(Uint8List?, String?, String?)> _stream(String command, String name,
@@ -207,7 +217,8 @@ class Client {
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }
-    return await _lockBinary.synchronized(() async => (await _receiveBinary(), r['type'] as String, null));
+    return await _lockBinary.synchronized(
+        () async => (await _receiveBinary(), r['type'] as String, null));
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map) async {

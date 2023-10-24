@@ -39,3 +39,6 @@
 ## 3.3.2
 - Separated the capture of text and binary data.
 - Bug related to asynchronous operation fixed.
+
+## 3.3.3
+- Improved parameter handling in the `report(...)` method.

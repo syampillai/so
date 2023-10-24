@@ -6,6 +6,16 @@ Future<void> main() async {
   if (status == "") {
     print("Logged in successfully");
     var (_, contentType, error) =
+        await client.report("com.storedobject.report.ObjectList", {
+      "className": "core.Person",
+      "attributes": ["FirstName", "LastName", "DateOfBirth", "Age"],
+    });
+    if (error == null) {
+      print("Mime type of the report content is: $contentType");
+    } else {
+      print(error);
+    }
+    (_, contentType, error) =
         await client.file("Weight Schedule - Approval Letter");
     if (error == null) {
       print("Mime type of the file retrieved is: $contentType");

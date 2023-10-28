@@ -59,4 +59,4 @@ SO platform wiki pages are available at [SO Platform Wiki](https://github.com/sy
 You may read the [SO Connector API](https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API)
 documentation to understand how you can communicate and exchange data with SO platform from your programs.
 
-If you are looking for a Java client library, please [see here](https://jitpack.io/#syampillai/SOClient).
+If you are looking for a Java client library, please [see here](https://github.com/syampillai/SOClient).

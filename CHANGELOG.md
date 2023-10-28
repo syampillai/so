@@ -42,3 +42,6 @@
 
 ## 3.3.3
 - Improved parameter handling in the `report(...)` method.
+
+## 3.3.4
+- Correction done in the README.md

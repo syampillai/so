@@ -1,8 +1,10 @@
 import 'package:so/so.dart';
 
 Future<void> main() async {
-  Client client = Client("emqim12.engravsystems.com", "emqimtest");
-  String status = await client.login("username", "password");
+  Client client;
+  client = Client("emqim12.engravsystems.com", "emqimtest");
+  String status;
+  status = await client.login("username", "password");
   if (status == "") {
     print("Logged in successfully");
     var (_, contentType, error) =
@@ -52,10 +54,10 @@ Future<void> main() async {
     };
     printResult(await client.command("list", attributes));
     print(
-        "A person whose name starts with N (Note: The fist person found is returned)");
+        "A person whose name starts with H (Note: The fist person found is returned)");
     attributes = {
       "className": "core.Person",
-      "where": "FirstName LIKE 'N%'",
+      "where": "FirstName LIKE 'H%'",
     };
     printResult(await client.command("get", attributes));
   } else {
@@ -70,6 +72,6 @@ void printResult(Map<String, dynamic> result) {
       var data = result['data'];
       print(data ?? result);
     default:
-      print("Error: ${result['message]']}");
+      print("Error: ${result['message']}");
   }
 }

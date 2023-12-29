@@ -45,3 +45,6 @@
 
 ## 3.3.4
 - Correction done in the README.md
+
+## 3.3.5
+- Correction in example file.

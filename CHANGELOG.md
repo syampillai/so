@@ -48,3 +48,6 @@
 
 ## 3.3.5
 - Correction in example file.
+
+## 3.3.6
+- Fixed typo in the example file.

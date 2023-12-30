@@ -54,7 +54,7 @@ Future<void> main() async {
     };
     printResult(await client.command("list", attributes));
     print(
-        "A person whose name starts with H (Note: The fist person found is returned)");
+        "A person whose name starts with H (Note: The first person found is returned)");
     attributes = {
       "className": "core.Person",
       "where": "FirstName LIKE 'H%'",

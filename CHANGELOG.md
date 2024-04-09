@@ -51,3 +51,6 @@
 
 ## 3.3.6
 - Fixed typo in the example file.
+
+## 3.3.7
+- Environment and dependencies updated to the latest available versions.

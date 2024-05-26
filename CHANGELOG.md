@@ -54,3 +54,6 @@
 
 ## 3.3.7
 - Environment and dependencies updated to the latest available versions.
+
+## 3.3.8
+- Environment and dependencies updated to the latest available versions.

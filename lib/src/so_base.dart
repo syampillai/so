@@ -25,13 +25,21 @@ class Client {
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   /// The [secured] parameter determines whether the connection should use TLS encryption or not.
-  Client(host, this.application,
-      [this.deviceWidth = 1024, this.deviceHeight = 768, secured = true])
-      : _connection = WebSocketChannel.connect(Uri.parse(
-            "ws${secured ? 's' : ''}://$host/$application/CONNECTORWS")) {
-    _subscription = _connection.stream.listen((message) => message is String
-        ? _received.add(message)
-        : _receivedBinary.add(message));
+  Client(
+    host,
+    this.application, [
+    this.deviceWidth = 1024,
+    this.deviceHeight = 768,
+    secured = true,
+  ]) : _connection = WebSocketChannel.connect(
+         Uri.parse("ws${secured ? 's' : ''}://$host/$application/CONNECTORWS"),
+       ) {
+    _subscription = _connection.stream.listen(
+      (message) =>
+          message is String
+              ? _received.add(message)
+              : _receivedBinary.add(message),
+    );
   }
 
   /// Get the current username.
@@ -62,7 +70,7 @@ class Client {
       "password": password,
       "version": 1,
       "deviceWidth": deviceWidth,
-      "deviceHeight": deviceHeight
+      "deviceHeight": deviceHeight,
     };
     _session = "";
     var r = await _post(map);
@@ -92,12 +100,16 @@ class Client {
   ///
   /// The return value contains the error message if any. An empty return value means that the password is changed successfully.
   Future<String> changePassword(
-      String currentPassword, String newPassword) async {
+    String currentPassword,
+    String newPassword,
+  ) async {
     if (!checkPassword(currentPassword)) {
       return "Current password is incorrect";
     }
-    var r = await command("changePassword",
-        {"oldPassword": _password, "newPassword": newPassword});
+    var r = await command("changePassword", {
+      "oldPassword": _password,
+      "newPassword": newPassword,
+    });
     if (r["status"] == "OK") {
       _password = newPassword;
       return "";
@@ -117,21 +129,23 @@ class Client {
   ///
   /// The map that is returned will contain the result of the execution of the command.
   Future<Map<String, dynamic>> command(
-      String command, Map<String, dynamic> attributes,
-      [bool preserveServerState = false]) async {
+    String command,
+    Map<String, dynamic> attributes, [
+    bool preserveServerState = false,
+  ]) async {
     return _command(command, attributes, true, preserveServerState);
   }
 
   Map<String, dynamic> _error(String error) {
-    return {
-      "status": "ERROR",
-      "message": error,
-    };
+    return {"status": "ERROR", "message": error};
   }
 
   Future<Map<String, dynamic>> _command(
-      String command, Map<String, dynamic> attributes, bool checkCommand,
-      [bool preserveServerState = false]) async {
+    String command,
+    Map<String, dynamic> attributes,
+    bool checkCommand, [
+    bool preserveServerState = false,
+  ]) async {
     if (_username == "" || _session == "") {
       return _error("Not logged in");
     }
@@ -195,8 +209,10 @@ class Client {
   /// the second element will be the content-type and the third element will be
   /// null. Otherwise, the first 2 elements will be null and the third element
   /// will be the error description.
-  Future<(Uint8List?, String?, String?)> report(String logic,
-      [Map<String, dynamic>? parameters]) async {
+  Future<(Uint8List?, String?, String?)> report(
+    String logic, [
+    Map<String, dynamic>? parameters,
+  ]) async {
     Map<String, dynamic>? m;
     if (parameters != null) {
       dynamic p = parameters["parameters"];
@@ -209,8 +225,11 @@ class Client {
     return await _stream("report", logic, m);
   }
 
-  Future<(Uint8List?, String?, String?)> _stream(String command, String name,
-      [Map<String, dynamic>? parameters]) async {
+  Future<(Uint8List?, String?, String?)> _stream(
+    String command,
+    String name, [
+    Map<String, dynamic>? parameters,
+  ]) async {
     parameters ??= {};
     parameters[command] = name;
     var r = await _command(command, parameters, false, false);
@@ -218,7 +237,8 @@ class Client {
       return (null, null, r['message'] as String);
     }
     return await _lockBinary.synchronized(
-        () async => (await _receiveBinary(), r['type'] as String, null));
+      () async => (await _receiveBinary(), r['type'] as String, null),
+    );
   }
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> map) async {
@@ -262,8 +282,11 @@ class Client {
   /// If the return value contains key ("status": "OK"), look for the value for the key "id". That will
   /// contain the ID of the server content. The [streamNameOrID] may be used to specify that
   /// you want to overwrite some existing content. It could be specified as a name or as an Id value.
-  Future<Map<String, dynamic>> upload(String mimeType, Uint8List data,
-      [String streamNameOrID = '']) async {
+  Future<Map<String, dynamic>> upload(
+    String mimeType,
+    Uint8List data, [
+    String streamNameOrID = '',
+  ]) async {
     Map<String, dynamic>? map = await _upload(mimeType, streamNameOrID);
     map ??= await _postBinary(data);
     map.remove('session');
@@ -277,19 +300,23 @@ class Client {
   /// contain the ID of the server content. The [streamNameOrID] may be used to specify that
   /// you want to overwrite some existing content. It could be specified as a name or as an Id value.
   Future<Map<String, dynamic>> uploadStream(
-      String mimeType, Stream<Uint8List> data,
-      [String streamNameOrID = '']) async {
+    String mimeType,
+    Stream<Uint8List> data, [
+    String streamNameOrID = '',
+  ]) async {
     Map<String, dynamic>? map = await _upload(mimeType, streamNameOrID);
     map ??= await _postBinaryStream(data);
     map.remove('session');
     return map;
   }
 
-  Future<Map<String, dynamic>?> _upload(String mimeType,
-      [String streamNameOrID = '']) async {
+  Future<Map<String, dynamic>?> _upload(
+    String mimeType, [
+    String streamNameOrID = '',
+  ]) async {
     Map<String, dynamic> map = {
       'type': mimeType,
-      if (streamNameOrID != '') 'stream': streamNameOrID
+      if (streamNameOrID != '') 'stream': streamNameOrID,
     };
     map = await command('upload', map);
     return map['status'] == 'OK' ? null : map;

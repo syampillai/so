@@ -65,4 +65,4 @@
 - Environment and dependencies updated to the latest available versions.
 
 ## 3.3.11
-- Environment and dependencies updated to the latest available versions.
+- Environment and dependencies updated to the latest available versions. Dart SDK 3.7.2

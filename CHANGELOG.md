@@ -63,3 +63,6 @@
 
 ## 3.3.10
 - Environment and dependencies updated to the latest available versions.
+
+## 3.3.11
+- Environment and dependencies updated to the latest available versions.

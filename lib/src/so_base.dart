@@ -25,8 +25,9 @@ class Client {
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   /// The [secured] parameter determines whether the connection should use TLS encryption or not.
-  Client(String host,
-      this.application, [
+  Client(
+    String host,
+    this.application, [
     this.deviceWidth = 1024,
     this.deviceHeight = 768,
     secured = true,

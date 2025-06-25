@@ -25,9 +25,8 @@ class Client {
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   /// The [secured] parameter determines whether the connection should use TLS encryption or not.
-  Client(
-    host,
-    this.application, [
+  Client(String host,
+      this.application, [
     this.deviceWidth = 1024,
     this.deviceHeight = 768,
     secured = true,
@@ -35,10 +34,9 @@ class Client {
          Uri.parse("ws${secured ? 's' : ''}://$host/$application/CONNECTORWS"),
        ) {
     _subscription = _connection.stream.listen(
-      (message) =>
-          message is String
-              ? _received.add(message)
-              : _receivedBinary.add(message),
+      (message) => message is String
+          ? _received.add(message)
+          : _receivedBinary.add(message),
     );
   }
 

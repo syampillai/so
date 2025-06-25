@@ -66,3 +66,6 @@
 
 ## 3.3.11
 - Environment and dependencies updated to the latest available versions. Dart SDK 3.7.2
+
+## 3.3.12
+- Environment and dependencies updated to the latest available versions. Dart SDK 3.8.1

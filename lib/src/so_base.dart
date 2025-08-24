@@ -16,6 +16,9 @@ class Client {
   /// Device height
   final int deviceHeight;
 
+  /// API key
+  final String apiKey;
+
   final WebSocketChannel _connection;
   StreamSubscription<dynamic>? _subscription;
   final Lock _lock = Lock(), _lockBinary = Lock();
@@ -31,8 +34,10 @@ class Client {
     this.deviceWidth = 1024,
     this.deviceHeight = 768,
     secured = true,
+    this.apiKey = "",
   ]) : _connection = WebSocketChannel.connect(
          Uri.parse("ws${secured ? 's' : ''}://$host/$application/CONNECTORWS"),
+         protocols: apiKey.isEmpty ? null : ['Bearer $apiKey'],
        ) {
     _subscription = _connection.stream.listen(
       (message) => message is String
@@ -53,10 +58,10 @@ class Client {
     return password == _password;
   }
 
-  /// Login. Requires username and password.
+  /// Login. Requires username, password is optional.
   ///
   /// Returns value contains the error message. If logged in successfully, the return value will be an empty string.
-  Future<String> login(String username, String password) async {
+  Future<String> login(String username, [String password = '']) async {
     if (_username != "") {
       return "Already logged in";
     }

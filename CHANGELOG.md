@@ -69,3 +69,6 @@
 
 ## 3.3.12
 - Environment and dependencies updated to the latest available versions. Dart SDK 3.8.1
+
+## 3.4.0
+- API key support added.

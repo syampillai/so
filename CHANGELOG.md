@@ -72,3 +72,7 @@
 
 ## 3.4.0
 - API key support added.
+
+## 3.5.0
+- Environment and dependencies updated to the latest available versions.
+- OTP-based login support added.

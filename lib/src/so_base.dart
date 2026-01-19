@@ -19,10 +19,13 @@ class Client {
   /// API key
   final String apiKey;
 
+  /// API version
+  final int apiVersion = 1;
+
   final WebSocketChannel _connection;
   StreamSubscription<dynamic>? _subscription;
   final Lock _lock = Lock(), _lockBinary = Lock();
-  String _username = "", _password = "", _session = "";
+  String _username = "", _password = "", _session = "", _otpEmail = "";
   final List<String> _received = [];
   final List<Uint8List> _receivedBinary = [];
 
@@ -72,7 +75,7 @@ class Client {
       "command": "login",
       "user": username,
       "password": password,
-      "version": 1,
+      "version": apiVersion,
       "deviceWidth": deviceWidth,
       "deviceHeight": deviceHeight,
     };
@@ -85,6 +88,52 @@ class Client {
     _username = username;
     _password = password;
     return "";
+  }
+
+  /// OTP-based login. OTPs must have been generated using [otp] before calling this method.
+  ///
+  /// Returns value contains the error message. If logged in successfully, the return value will be an empty string.
+  Future<String> otpLogin(int emailOTP, [int mobileOTP = 0]) async {
+    if (_username != "") {
+      return "Already logged in";
+    }
+    if (_otpEmail == "" || _session == "") {
+      return "OTP was not generated";
+    }
+    Map<String, dynamic> map = {
+      "command": "otp",
+      "action": "login",
+      "continue": true,
+      "session": _session,
+      "emailOTP": emailOTP,
+      "mobileOTP": mobileOTP,
+      "version": apiVersion,
+      "deviceWidth": deviceWidth,
+      "deviceHeight": deviceHeight,
+    };
+    var r = await _post(map);
+    if (r["status"] != "OK") {
+      return r["message"] as String;
+    }
+    _session = r["session"] as String;
+    _username = _otpEmail;
+    _password = r["secret"];
+    return "";
+  }
+
+  /// Command to initiate an OTP-based login. Server will generate OTPs and send
+  /// them to the email address and/or mobile.
+  ///
+  /// The response should be checked for prefix values of the OTPs.
+  Future<Map<String, dynamic>> otp(String email, [String mobile = '']) async {
+    _otpEmail = email;
+    Map<String, dynamic> map = {
+      "command": "otp",
+      "action": "init",
+      "email": email,
+      "mobile": mobile,
+    };
+    return command("otp", map);
   }
 
   /// Logout.
@@ -150,7 +199,14 @@ class Client {
     bool checkCommand, [
     bool preserveServerState = false,
   ]) async {
-    if (_username == "" || _session == "") {
+    bool sessionRequired = true;
+    if (command == "register" || command == "otp") {
+      dynamic action = attributes["action"];
+      if (action != null && (action is String)) {
+        sessionRequired = !(action == "init");
+      }
+    }
+    if (sessionRequired && (_username == "" || _session == "")) {
       return _error("Not logged in");
     }
     if (checkCommand) {
@@ -160,7 +216,9 @@ class Client {
           return _error("Invalid command");
       }
     }
-    attributes["session"] = _session;
+    if (sessionRequired) {
+      attributes["session"] = _session;
+    }
     attributes["command"] = command;
     if (preserveServerState) {
       attributes["continue"] = true;

@@ -203,7 +203,7 @@ class Client {
       dynamic action = attributes["action"];
       if (action != null && (action is String)) {
         sessionRequired = action != "init";
-        if(sessionRequired && (command == "register") && (action == "otp")) {
+        if (sessionRequired && (command == "register") && (action == "otp")) {
           sessionRequired = false;
         }
       }

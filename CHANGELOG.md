@@ -77,6 +77,6 @@
 - Environment and dependencies updated to the latest available versions.
 - OTP-based login support added.
 
-## 3.6.0
+## 3.5.1
 - Environment and dependencies updated to the latest available versions.
 - Bug fix in session handling where command is "register" and action is "otp".

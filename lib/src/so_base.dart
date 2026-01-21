@@ -128,7 +128,6 @@ class Client {
   Future<Map<String, dynamic>> otp(String email, [String mobile = '']) async {
     _otpEmail = email;
     Map<String, dynamic> map = {
-      "command": "otp",
       "action": "init",
       "email": email,
       "mobile": mobile,
@@ -203,7 +202,10 @@ class Client {
     if (command == "register" || command == "otp") {
       dynamic action = attributes["action"];
       if (action != null && (action is String)) {
-        sessionRequired = !(action == "init");
+        sessionRequired = action != "init";
+        if(sessionRequired && (command == "register") && (action == "otp")) {
+          sessionRequired = false;
+        }
       }
     }
     if (sessionRequired && (_username == "" || _session == "")) {

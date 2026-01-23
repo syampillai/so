@@ -80,3 +80,6 @@
 ## 3.5.1
 - Environment and dependencies updated to the latest available versions.
 - Bug fix in session handling where command is "register" and action is "otp".
+
+## 3.5.2
+- Fixed the session handling bug when the command is "register"".

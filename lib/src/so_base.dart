@@ -235,7 +235,7 @@ class Client {
         return _error("Can't re-login. Reason: $status");
       }
       return await this.command(command, attributes, false);
-    } else if(!sessionRequired) {
+    } else if (!sessionRequired) {
       _session = r["session"];
     }
     r.remove("session");

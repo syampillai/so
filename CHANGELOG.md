@@ -83,3 +83,7 @@
 
 ## 3.5.2
 - Fixed the session handling bug when the command is "register"".
+
+## 3.5.3
+- Bug fix in commands "register" and "otp".
+- Added more test cases.

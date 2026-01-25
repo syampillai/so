@@ -142,7 +142,7 @@ class Client {
     try {
       await command("logout", {});
       _subscription?.cancel();
-      _connection.sink.close(status.goingAway);
+      _connection.sink.close(status.normalClosure);
     } finally {
       _session = _password = _username = "";
     }
@@ -192,23 +192,43 @@ class Client {
     return {"status": "ERROR", "message": error};
   }
 
+  String _action(Map<String, dynamic> attributes) {
+    dynamic action = attributes["action"];
+    if (action != null && (action is String)) {
+      return action;
+    }
+    return "";
+  }
+
+  void _setOTPEmail(Map<String, dynamic> attributes) {
+    dynamic email = attributes["email"];
+    if(email != null) {
+      _otpEmail = email;
+    }
+  }
+
   Future<Map<String, dynamic>> _command(
     String command,
     Map<String, dynamic> attributes,
     bool checkCommand, [
     bool preserveServerState = false,
   ]) async {
-    bool sessionRequired = true;
-    if (command == "register" || command == "otp") {
-      dynamic action = attributes["action"];
-      if (action != null && (action is String)) {
-        sessionRequired = action != "init";
-        if (sessionRequired && (command == "register") && (action == "otp")) {
-          sessionRequired = false;
-        }
+    bool sessionRequired = true,  loginRequired = true;
+    if(command == "register") {
+      loginRequired = false;
+      dynamic action = _action(attributes);
+      sessionRequired = !(action == "init" || action == "otp");
+    } else if(command == "otp") {
+      dynamic action = _action(attributes);
+      sessionRequired = action != "init";
+      if(sessionRequired) {
+        loginRequired = action != "verify";
       }
     }
-    if (sessionRequired && (_username == "" || _session == "")) {
+    if(!sessionRequired) {
+      _setOTPEmail(attributes);
+    }
+    if (sessionRequired && ((loginRequired && _username == "") || _session == "")) {
       return _error("Not logged in");
     }
     if (checkCommand) {

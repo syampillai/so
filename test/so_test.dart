@@ -21,14 +21,14 @@ void main() {
       final Client client = Client(server, application);
       final String email = "new_user@xxx.com";
       Map<String, dynamic> a = {};
-      a["action"] ="otp";
+      a["action"] = "otp";
       a["email"] = email;
       var r = await client.command("register", a);
       print("Message: ${r['message']}");
       expect(r["status"], "OK");
       stdout.write('Register with OTP ${r["prefixEmail"]} ');
       String? input = stdin.readLineSync();
-      if(input != null) {
+      if (input != null) {
         a["action"] = "logic";
         a["emailOTP"] = int.parse(input);
         r = await client.command("register", a, true);
@@ -46,7 +46,7 @@ void main() {
       expect(r["status"], "OK");
       stdout.write('Login with OTP ${r["prefixEmail"]} ');
       String? input = stdin.readLineSync();
-      if(input != null) {
+      if (input != null) {
         int otp = int.parse(input);
         expect(await client.otpLogin(otp), "");
       }

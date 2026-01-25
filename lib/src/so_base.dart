@@ -202,7 +202,7 @@ class Client {
 
   void _setOTPEmail(Map<String, dynamic> attributes) {
     dynamic email = attributes["email"];
-    if(email != null) {
+    if (email != null) {
       _otpEmail = email;
     }
   }
@@ -213,22 +213,23 @@ class Client {
     bool checkCommand, [
     bool preserveServerState = false,
   ]) async {
-    bool sessionRequired = true,  loginRequired = true;
-    if(command == "register") {
+    bool sessionRequired = true, loginRequired = true;
+    if (command == "register") {
       loginRequired = false;
       dynamic action = _action(attributes);
       sessionRequired = !(action == "init" || action == "otp");
-    } else if(command == "otp") {
+    } else if (command == "otp") {
       dynamic action = _action(attributes);
       sessionRequired = action != "init";
-      if(sessionRequired) {
+      if (sessionRequired) {
         loginRequired = action != "verify";
       }
     }
-    if(!sessionRequired) {
+    if (!sessionRequired) {
       _setOTPEmail(attributes);
     }
-    if (sessionRequired && ((loginRequired && _username == "") || _session == "")) {
+    if (sessionRequired &&
+        ((loginRequired && _username == "") || _session == "")) {
       return _error("Not logged in");
     }
     if (checkCommand) {

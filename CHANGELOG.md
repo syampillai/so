@@ -87,3 +87,6 @@
 ## 3.5.3
 - Bug fix in commands "register" and "otp".
 - Added more test cases.
+
+## 3.5.4
+- Introduced a new method called info() to retrieve information from the server without logging in.

@@ -185,7 +185,23 @@ class Client {
     Map<String, dynamic> attributes, [
     bool preserveServerState = false,
   ]) async {
-    return _command(command, attributes, true, preserveServerState);
+    return _command(command, attributes, true, preserveServerState, true);
+  }
+
+  /// Send a command to retrieve information from the server that doesn't require access rights.
+  ///
+  /// The [attributes] should contain a map of the parameters. Please refer to the
+  /// [SO Connector](https://github.com/syampillai/SOTraining/wiki/8900.-SO-Connector-API) documentation
+  /// for parameter details. Please note that [command] is passed as the first parameter and thus, it need
+  /// not be specified in the [attributes]. Also, "session" is not required because [Client] will
+  /// automatically add that.
+  ///
+  /// The map that is returned will contain the result of the execution of the command.
+  Future<Map<String, dynamic>> info(
+    String command,
+    Map<String, dynamic> attributes,
+  ) async {
+    return _command(command, attributes, true, false, false);
   }
 
   Map<String, dynamic> _error(String error) {
@@ -210,15 +226,16 @@ class Client {
   Future<Map<String, dynamic>> _command(
     String command,
     Map<String, dynamic> attributes,
-    bool checkCommand, [
-    bool preserveServerState = false,
-  ]) async {
-    bool sessionRequired = true, loginRequired = true;
-    if (command == "register") {
+    bool checkCommand,
+    bool preserveServerState,
+    bool loginRequired,
+  ) async {
+    bool sessionRequired = loginRequired;
+    if (sessionRequired && command == "register") {
       loginRequired = false;
       dynamic action = _action(attributes);
       sessionRequired = !(action == "init" || action == "otp");
-    } else if (command == "otp") {
+    } else if (sessionRequired && command == "otp") {
       dynamic action = _action(attributes);
       sessionRequired = action != "init";
       if (sessionRequired) {
@@ -319,7 +336,7 @@ class Client {
   ]) async {
     parameters ??= {};
     parameters[command] = name;
-    var r = await _command(command, parameters, false, false);
+    var r = await _command(command, parameters, false, false, true);
     if (r['status'] == 'ERROR') {
       return (null, null, r['message'] as String);
     }

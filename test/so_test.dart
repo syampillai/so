@@ -52,5 +52,14 @@ void main() {
       }
       client.logout();
     });
+
+    test("Open Access", () async {
+      final Client client = Client(server, application);
+      var r = await client.info("getCountries", {});
+      print("Message: ${r['message']}");
+      print(r);
+      expect(r["status"], "OK");
+      client.logout();
+    });
   });
 }

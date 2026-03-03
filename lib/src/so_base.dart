@@ -28,6 +28,7 @@ class Client {
   String _username = "", _password = "", _session = "", _otpEmail = "";
   final List<String> _received = [];
   final List<Uint8List> _receivedBinary = [];
+  Timer? _heartbeat;
 
   /// Constructor that takes the host name, [application] name, [deviceWidth] and [deviceHeight].
   /// The [secured] parameter determines whether the connection should use TLS encryption or not.
@@ -47,6 +48,24 @@ class Client {
           ? _received.add(message)
           : _receivedBinary.add(message),
     );
+    _startHeartbeat();
+  }
+
+  void _startHeartbeat() {
+    _heartbeat?.cancel(); // Ensure no duplicate timers
+    _heartbeat = Timer.periodic(Duration(seconds: 20), (timer) {
+      try {
+        print("Pinging...");
+        command("ping", {});
+      } catch (e) {
+        _cleanup();
+      }
+    });
+  }
+
+  void _cleanup() {
+    _heartbeat?.cancel();
+    _subscription?.cancel();
   }
 
   /// Get the current username.
@@ -141,7 +160,7 @@ class Client {
   Future<void> logout() async {
     try {
       await command("logout", {});
-      _subscription?.cancel();
+      _cleanup();
       _connection.sink.close(status.normalClosure);
     } finally {
       _session = _password = _username = "";

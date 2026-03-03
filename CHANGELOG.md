@@ -90,3 +90,7 @@
 
 ## 3.5.4
 - Introduced a new method called info() to retrieve information from the server without logging in.
+
+## 3.6.0
+- Environment and dependencies updated to the latest available versions.
+- implemented ping to keep the connection alive.

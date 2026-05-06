@@ -66,7 +66,9 @@ class Client {
     _heartbeat = Timer.periodic(const Duration(seconds: 20), (timer) {
       if (_session != "") {
         try {
-          _connection.sink.add(jsonEncode({"command": "ping", "session": _session}));
+          _connection.sink.add(
+            jsonEncode({"command": "ping", "session": _session}),
+          );
         } catch (e) {
           _cleanup();
         }

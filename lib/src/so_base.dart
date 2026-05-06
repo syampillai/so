@@ -39,26 +39,37 @@ class Client {
     this.deviceHeight = 768,
     secured = true,
     this.apiKey = "",
+    Duration? pingInterval,
   ]) : _connection = WebSocketChannel.connect(
          Uri.parse("ws${secured ? 's' : ''}://$host/$application/CONNECTORWS"),
          protocols: apiKey.isEmpty ? null : ['Bearer $apiKey'],
        ) {
     _subscription = _connection.stream.listen(
-      (message) => message is String
-          ? _received.add(message)
-          : _receivedBinary.add(message),
+      (message) {
+        if (message is String) {
+          if (message.contains('"command":"ping"')) {
+            return;
+          }
+          _received.add(message);
+        } else {
+          _receivedBinary.add(message);
+        }
+      },
+      onError: (e) => _cleanup(),
+      onDone: () => _cleanup(),
     );
     _startHeartbeat();
   }
 
   void _startHeartbeat() {
     _heartbeat?.cancel(); // Ensure no duplicate timers
-    _heartbeat = Timer.periodic(Duration(seconds: 20), (timer) {
-      try {
-        print("Pinging...");
-        command("ping", {});
-      } catch (e) {
-        _cleanup();
+    _heartbeat = Timer.periodic(const Duration(seconds: 20), (timer) {
+      if (_session != "") {
+        try {
+          _connection.sink.add(jsonEncode({"command": "ping", "session": _session}));
+        } catch (e) {
+          _cleanup();
+        }
       }
     });
   }

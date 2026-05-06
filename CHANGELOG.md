@@ -94,3 +94,8 @@
 ## 3.6.0
 - Environment and dependencies updated to the latest available versions.
 - implemented ping to keep the connection alive.
+
+## 3.6.1
+- Environment and dependencies updated to the latest available versions.
+- Bug fix in the ping method.
+- Ping handling improved for better reliability.

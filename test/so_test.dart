@@ -5,7 +5,7 @@ import 'dart:io';
 void main() {
   group("Tests", () {
     final String server = "sodev.saasvaap.com";
-    final String application = "aerotrade";
+    final String application = "aerotradedev";
 
     setUp(() {});
 

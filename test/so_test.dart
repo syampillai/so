@@ -19,7 +19,7 @@ void main() {
 
     test("OTP Register", () async {
       final Client client = Client(server, application);
-      final String email = "new_user@xxx.com";
+      final String email = "syam@engravgroup.com";
       Map<String, dynamic> a = {};
       a["action"] = "otp";
       a["email"] = email;

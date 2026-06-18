@@ -99,3 +99,7 @@
 - Environment and dependencies updated to the latest available versions.
 - Bug fix in the ping method.
 - Ping handling improved for better reliability.
+
+## 3.6.2
+- Environment and dependencies updated to the latest available versions.
+- Bug fix in the ping response handling.

@@ -47,8 +47,8 @@ class Client {
     _subscription = _connection.stream.listen(
       (message) {
         if (message is String) {
-          if (message.contains('"command":"ping"')) {
-            return;
+          if (message.contains('"_P":"P"')) {
+            return; // Ping responses
           }
           _received.add(message);
         } else {
